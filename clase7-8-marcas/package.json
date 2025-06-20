@@ -1,0 +1,24 @@
+{
+  "name": "clase5-node",
+  "version": "1.0.0",
+  "description": "ejemplo de inicio de proyecto con node",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:dev": "node --watch ./src/server.js",
+    "start": "node ./src/server.js"
+  },
+  "type": "module",
+  "keywords": [
+    "ejemplo",
+    "node"
+  ],
+  "author": "Johan Hernandez",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  }
+}
