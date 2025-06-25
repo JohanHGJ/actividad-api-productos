@@ -1,54 +1,123 @@
 import { validateId, foundId } from './validation/validation.js';
+import prisma from '../prisma.js';
 
-let id = 1;
-const products = [];
+async function createNewProducto(data, res) {
+    try {
+        const { nombre, precio, marcaId, categoriaIds } = data;
 
-function createNewProducto(data, res) {        
-    const new_product = {
-        id: id++,
-        ...data
+        // Validaciones básicas
+        if (!nombre || !precio || !marcaId || !Array.isArray(categoriaIds)) {
+            return res.status(400).json({
+                error: "Faltan campos obligatorios o el formato es incorrecto",
+                requiredFields: {
+                    nombre: "string",
+                    precio: "number",
+                    marcaId: "number",
+                    categoriaIds: "array<number>"
+                }
+            });
+        }
+
+        const newProduct = await prisma.producto.create({
+            data: {
+                nombre,
+                precio: parseFloat(precio),
+                marca: { connect: { id: parseInt(marcaId) } },
+                categorias: {
+                    connect: categoriaIds.map(id => ({ id: parseInt(id) }))
+                }
+            }
+        });
+
+        res.json({
+            message: "Producto creado con éxito",
+            status: 200,
+            product: newProduct
+        });
+    } catch (error) {
+        console.error("Error creating product:", error);
+        res.status(500).json({
+            error: "Error al crear producto",
+            details: error.message
+        });
     }
-    products.push(new_product)
-    res.json({
-        message: "new product created",
-        status: 200
-    })
 }
 
-function allProducts(res) {
-    res.json(products)    
+async function allProducts(res) {
+    try {
+        const productos = await prisma.producto.findMany({
+            include: {
+                marca: true,
+                categorias: true
+            }
+        });
+        res.json(productos);
+    } catch (error) {
+        res.status(500).json({ error: "Error al obtener productos" });
+    }
 }
 
-function productById(id, res) {
-    const isInt = +id
-    if (!validateId(isInt, res)) return;
-    let product = products.find((p) => p.id === isInt);
-    if (!foundId(product, res)) return;
-    res.json(product)
-}
-
-function updateProductById(id, body, res) {
-    const isInt = +id
-    if (!validateId(isInt, res)) return;
-    const productIndex = products.findIndex((p) => p.id === isInt);
-    if (!foundId(products[productIndex], res)) return;
-    products[productIndex] = {...products[productIndex], ...body}
-    res.json({
-        message: "product updated",
-        status: 200 
-    })
-}
-
-function deleteProductById(id, res) {
+async function productById(id, res) {
     const isInt = +id;
     if (!validateId(isInt, res)) return;
-    const productIndex = products.findIndex(p => p.id === isInt);
-    if (!foundId(products[productIndex], res)) return;
-    products.splice(productIndex, 1);
-    res.json({
-        message: "Product deleted successfully",
-        status: 200
-    });
+
+    try {
+        const product = await prisma.producto.findUnique({
+            where: { id: isInt },
+            include: {
+                marca: true,
+                categorias: true
+            }
+        });
+
+        if (!foundId(product, res)) return;
+
+        res.json(product);
+    } catch (error) {
+        res.status(500).json({ error: "Error al obtener producto" });
+    }
+}
+
+async function updateProductById(id, body, res) {
+    const isInt = +id;
+    if (!validateId(isInt, res)) return;
+
+    try {
+        const updatedProduct = await prisma.producto.update({
+            where: { id: isInt },
+            data: body,
+            include: {
+                marca: true,
+                categorias: true
+            }
+        });
+
+        res.json({
+            message: "Producto actualizado",
+            status: 200,
+            product: updatedProduct
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Error al actualizar producto" });
+    }
+}
+
+async function deleteProductById(id, res) {
+    const isInt = +id;
+    if (!validateId(isInt, res)) return;
+
+    try {
+        await prisma.producto.delete({
+            where: { id: isInt }
+        });
+
+        res.json({
+            message: "Producto eliminado exitosamente",
+            status: 200
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Error al eliminar producto" });
+    }
 }
 
 export default {
@@ -57,4 +126,4 @@ export default {
     productById,
     updateProductById,
     deleteProductById
-}
+};

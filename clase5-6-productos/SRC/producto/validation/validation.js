@@ -19,3 +19,14 @@ export function foundId(product, res) {
     }
     return true;
 }
+
+export function validateRelations(relations, res) {
+    if (!relations || relations.length === 0) {
+        res.status(400).json({
+            message: 'Debes proporcionar relaciones válidas',
+            status: 400
+        });
+        return false;
+    }
+    return true;
+}

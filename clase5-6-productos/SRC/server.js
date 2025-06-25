@@ -1,16 +1,35 @@
 import express from "express"
 import productos from "./producto/controller.js"
-// Si tienes empleados, importa también:
-// import empleados from "./empleados.js"
+import prisma from "./prisma.js"
 
 const app = express()
-const PORT = 3000;
+const PORT = 3000
 
-app.use(express.json());
-// Si tienes empleados, usa:
-// app.use('/empleados', empleados)
-app.use('/productos', productos);
+// Middleware para parsear JSON
+app.use(express.json())
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`)
+// Conexión a la base de datos
+async function connectDB() {
+    try {
+    await prisma.$connect()
+    console.log(" Conectado a la base de datos")
+    } catch (error) {
+    console.error(" Error de conexión:", error.message)
+    process.exit(1) // Termina el proceso si no puede conectar
+    }
+}
+
+// Rutas
+app.use('/productos', productos)
+
+// Iniciar servidor
+app.listen(PORT, async () => {
+    await connectDB()
+    console.log(`Servidor en http://localhost:${PORT}`)
+})
+
+// Manejo de cierre
+process.on('SIGINT', async () => {
+    await prisma.$disconnect()
+    process.exit()
 })

@@ -16,9 +16,14 @@
   "author": "Johan Hernandez",
   "license": "ISC",
   "dependencies": {
-    "express": "^5.1.0"
+    "@prisma/client": "^6.10.1",
+    "express": "^5.1.0",
+    "prisma": "^6.10.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   }
 }
